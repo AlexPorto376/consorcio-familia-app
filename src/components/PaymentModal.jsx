@@ -1,94 +1,122 @@
 import React from 'react';
+import { X, CheckCircle2, Circle, DollarSign, Award } from 'lucide-react';
 
 export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment }) => {
     if (!isOpen || !monthData) return null;
 
-    // Calculate stats for this specific month
+    // Cálculo de estatísticas
     const totalPaid = monthData.payments
         .filter(p => p.status === 'paid')
-        .reduce((acc, curr) => acc + curr.value, 0);
+        .reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
 
     const totalParticipants = monthData.payments.length;
     const paidCount = monthData.payments.filter(p => p.status === 'paid').length;
+    const progressPercent = (paidCount / totalParticipants) * 100;
 
     return (
-        <div style={{
-            position: 'fixed', inset: 0, zIndex: 50,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '20px', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)'
-        }} onClick={onClose}>
-            <div className="glass-card" style={{
-                width: '100%', maxWidth: '500px', maxHeight: '85vh',
-                background: '#1e293b', border: '1px solid var(--accent-blue)',
-                display: 'flex', flexDirection: 'column'
-            }} onClick={e => e.stopPropagation()}>
-
-                {/* Header */}
-                <div style={{ padding: '20px', borderBottom: '1px solid var(--glass-border)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        // Fundo escuro com desfoque (Backdrop)
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+        >
+            {/* Contentor Principal do Modal */}
+            <div 
+                className="relative flex w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in zoom-in-95"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Cabeçalho do Modal */}
+                <div className="border-b border-slate-100 bg-slate-50 p-6">
+                    <div className="flex items-start justify-between">
                         <div>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Mês de {monthData.month}</p>
-                            <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>Contemplado: <span style={{ color: 'var(--accent-blue)' }}>{monthData.contemplated}</span></h3>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                Mês de {monthData.month}
+                            </span>
+                            <h3 className="mt-1 flex items-center gap-2 text-xl font-bold text-slate-800">
+                                <Award size={20} className="text-amber-500" />
+                                {monthData.contemplated}
+                            </h3>
                         </div>
-                        <button onClick={onClose} style={{ background: 'none', color: 'var(--text-secondary)', fontSize: '1.5rem' }}>&times;</button>
+                        <button 
+                            onClick={onClose}
+                            className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
 
-                    <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '0.875rem' }}>Arrecadado neste mês:</span>
-                            <span style={{ fontWeight: 'bold', color: 'var(--accent-blue)' }}>R$ {totalPaid}</span>
+                    {/* Resumo Financeiro do Mês */}
+                    <div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                        <div className="flex items-end justify-between">
+                            <span className="text-sm font-medium text-emerald-800">Total Arrecadado</span>
+                            <span className="text-lg font-bold text-emerald-600">R$ {totalPaid}</span>
                         </div>
-                        <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{
-                                width: `${(paidCount / totalParticipants) * 100}%`,
-                                height: '100%', background: 'var(--success)', transition: 'width 0.3s'
-                            }} />
-                        </div>
-                        <p style={{ fontSize: '0.75rem', marginTop: '4px', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                            {paidCount} de {totalParticipants} pagaram
-                        </p>
-                    </div>
-                </div>
-
-                {/* Scrollable List */}
-                <div style={{ overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {monthData.payments.map((participant, index) => (
-                        <div key={index} style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px',
-                            borderLeft: participant.status === 'paid' ? '4px solid var(--success)' : '4px solid var(--text-secondary)'
-                        }}>
-                            <div>
-                                <p style={{ fontWeight: '600' }}>{participant.name}</p>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Valor:</span>
-                                    <input
-                                        type="number"
-                                        value={participant.value}
-                                        onChange={(e) => onUpdatePayment(monthData.month, participant.name, 'value', Number(e.target.value))}
-                                        style={{
-                                            background: 'transparent', border: 'none', borderBottom: '1px solid var(--text-secondary)',
-                                            color: 'var(--text-primary)', width: '60px', padding: '2px', fontSize: '0.9rem'
-                                        }}
-                                    />
-                                </div>
+                        
+                        <div className="mt-3 flex items-center gap-3">
+                            <div className="h-2 flex-1 overflow-hidden rounded-full bg-emerald-200/50">
+                                <div 
+                                    className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                                    style={{ width: `${progressPercent}%` }}
+                                />
                             </div>
-
-                            <button
-                                onClick={() => onUpdatePayment(monthData.month, participant.name, 'status', participant.status === 'paid' ? 'pending' : 'paid')}
-                                style={{
-                                    padding: '8px 16px', borderRadius: '6px', fontWeight: '600', fontSize: '0.8rem',
-                                    background: participant.status === 'paid' ? 'var(--success)' : 'rgba(255,255,255,0.1)',
-                                    color: participant.status === 'paid' ? '#000' : 'var(--text-secondary)',
-                                    border: participant.status === 'paid' ? 'none' : '1px solid var(--text-secondary)'
-                                }}
-                            >
-                                {participant.status === 'paid' ? 'PAGO' : 'PENDENTE'}
-                            </button>
+                            <span className="text-xs font-semibold text-emerald-700">
+                                {paidCount}/{totalParticipants}
+                            </span>
                         </div>
-                    ))}
+                    </div>
                 </div>
 
+                {/* Lista de Pagamentos (Scroll) */}
+                <div className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto p-4 sm:max-h-[60vh]">
+                    {monthData.payments.map((participant, index) => {
+                        const isPaid = participant.status === 'paid';
+                        
+                        return (
+                            <div 
+                                key={index} 
+                                className={`flex items-center justify-between rounded-xl border p-3 transition-colors ${
+                                    isPaid 
+                                        ? 'border-emerald-200 bg-emerald-50/50' 
+                                        : 'border-slate-200 bg-white hover:border-slate-300'
+                                }`}
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <span className={`font-semibold ${isPaid ? 'text-emerald-900' : 'text-slate-800'}`}>
+                                        {participant.name}
+                                    </span>
+                                    
+                                    {/* Campo de Valor Editável Moderno */}
+                                    <div className="flex items-center gap-1 text-slate-500">
+                                        <DollarSign size={14} />
+                                        <input
+                                            type="number"
+                                            value={participant.value}
+                                            onChange={(e) => onUpdatePayment(monthData.month, participant.name, 'value', Number(e.target.value))}
+                                            className={`w-16 bg-transparent text-sm font-medium focus:outline-none ${isPaid ? 'text-emerald-700' : 'text-slate-600'}`}
+                                            min="0"
+                                            step="10"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Botão de Ação Toggle */}
+                                <button
+                                    onClick={() => onUpdatePayment(monthData.month, participant.name, 'status', isPaid ? 'pending' : 'paid')}
+                                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
+                                        isPaid 
+                                            ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm shadow-emerald-200' 
+                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                                    }`}
+                                >
+                                    {isPaid ? (
+                                        <> <CheckCircle2 size={16} /> Pago </>
+                                    ) : (
+                                        <> <Circle size={16} /> Pendente </>
+                                    )}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

@@ -1,35 +1,56 @@
 import React from 'react';
+import { X, FileText, CheckCircle2 } from 'lucide-react';
 
 export const RulesModal = ({ isOpen, onClose, rules }) => {
     if (!isOpen) return null;
 
     return (
-        <div style={{
-            position: 'fixed', inset: 0, zIndex: 50,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '20px', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)'
-        }} onClick={onClose}>
-            <div className="glass-card" style={{
-                width: '100%', maxWidth: '400px', padding: '24px',
-                background: '#1e293b', border: '1px solid var(--accent-gold)'
-            }} onClick={e => e.stopPropagation()}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                    <h3 style={{ fontSize: '1.25rem', color: 'var(--accent-gold)' }}>Regras</h3>
-                    <button onClick={onClose} style={{ background: 'none', color: 'var(--text-secondary)', fontSize: '1.5rem' }}>&times;</button>
+        // Fundo escuro com desfoque (Backdrop)
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+        >
+            {/* Contentor Principal */}
+            <div 
+                className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl animate-in zoom-in-95"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Cabeçalho */}
+                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-6">
+                    <div className="flex items-center gap-3">
+                        <div className="flex rounded-xl bg-amber-100 p-2 text-amber-600">
+                            <FileText size={20} strokeWidth={2.5} />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800">Regras do Consórcio</h3>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingLeft: '20px' }}>
-                    {rules.map((rule, idx) => (
-                        <li key={idx} style={{ color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                            {rule}
-                        </li>
-                    ))}
-                </ul>
-                <button onClick={onClose} style={{
-                    marginTop: '24px', width: '100%', padding: '12px', borderRadius: '8px',
-                    background: 'var(--accent-gold)', color: '#0f172a', fontWeight: 'bold'
-                }}>
-                    Entendi
-                </button>
+
+                {/* Área de Conteúdo */}
+                <div className="p-6">
+                    {/* Lista de Regras com Ícones */}
+                    <ul className="flex flex-col gap-4">
+                        {rules.map((rule, idx) => (
+                            <li key={idx} className="flex items-start gap-3 text-sm font-medium text-slate-600">
+                                <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-500" />
+                                <span className="leading-relaxed">{rule}</span>
+                            </li>
+                        ))}
+                    </ul>
+
+                    {/* Botão de Confirmação */}
+                    <button 
+                        onClick={onClose} 
+                        className="mt-8 w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-slate-900 active:bg-slate-950"
+                    >
+                        Li e Entendi
+                    </button>
+                </div>
             </div>
         </div>
     );

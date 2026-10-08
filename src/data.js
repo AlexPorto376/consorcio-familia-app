@@ -7,11 +7,11 @@ const generateMonthData = (month, contemplated) => {
   return {
     month,
     contemplated,
-    prizeValue: 1000,
+    prizeValue: 1500,
     status: 'pending',
     payments: participantsList.map(name => ({
       name,
-      value: 100, // Default contribution
+      value: 150, // Default contribution
       status: 'pending' // pending | paid
     }))
   };
