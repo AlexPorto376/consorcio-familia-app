@@ -1,10 +1,9 @@
 import React from 'react';
 import { X, CheckCircle2, Circle, DollarSign, Award } from 'lucide-react';
 
-export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment }) => {
+export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment, isAdmin }) => {
     if (!isOpen || !monthData) return null;
 
-    // Cálculo de estatísticas
     const totalPaid = monthData.payments
         .filter(p => p.status === 'paid')
         .reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
@@ -14,17 +13,14 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment }) =>
     const progressPercent = (paidCount / totalParticipants) * 100;
 
     return (
-        // Fundo escuro com desfoque (Backdrop)
         <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity"
             onClick={onClose}
         >
-            {/* Contentor Principal do Modal */}
             <div 
                 className="relative flex w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in zoom-in-95"
                 onClick={e => e.stopPropagation()}
             >
-                {/* Cabeçalho do Modal */}
                 <div className="border-b border-slate-100 bg-slate-50 p-6">
                     <div className="flex items-start justify-between">
                         <div>
@@ -44,7 +40,6 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment }) =>
                         </button>
                     </div>
 
-                    {/* Resumo Financeiro do Mês */}
                     <div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
                         <div className="flex items-end justify-between">
                             <span className="text-sm font-medium text-emerald-800">Total Arrecadado</span>
@@ -65,7 +60,6 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment }) =>
                     </div>
                 </div>
 
-                {/* Lista de Pagamentos (Scroll) */}
                 <div className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto p-4 sm:max-h-[60vh]">
                     {monthData.payments.map((participant, index) => {
                         const isPaid = participant.status === 'paid';
@@ -84,35 +78,52 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment }) =>
                                         {participant.name}
                                     </span>
                                     
-                                    {/* Campo de Valor Editável Moderno */}
                                     <div className="flex items-center gap-1 text-slate-500">
                                         <DollarSign size={14} />
-                                        <input
-                                            type="number"
-                                            value={participant.value}
-                                            onChange={(e) => onUpdatePayment(monthData.month, participant.name, 'value', Number(e.target.value))}
-                                            className={`w-16 bg-transparent text-sm font-medium focus:outline-none ${isPaid ? 'text-emerald-700' : 'text-slate-600'}`}
-                                            min="0"
-                                            step="10"
-                                        />
+                                        {/* Apenas o Gestor vê a caixa para editar o valor */}
+                                        {isAdmin ? (
+                                            <input
+                                                type="number"
+                                                value={participant.value}
+                                                onChange={(e) => onUpdatePayment(monthData.month, participant.name, 'value', Number(e.target.value))}
+                                                className={`w-16 bg-transparent text-sm font-medium focus:outline-none ${isPaid ? 'text-emerald-700' : 'text-slate-600'}`}
+                                                min="0" step="10"
+                                            />
+                                        ) : (
+                                            <span className={`text-sm font-medium ${isPaid ? 'text-emerald-700' : 'text-slate-600'}`}>
+                                                {participant.value}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Botão de Ação Toggle */}
-                                <button
-                                    onClick={() => onUpdatePayment(monthData.month, participant.name, 'status', isPaid ? 'pending' : 'paid')}
-                                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
-                                        isPaid 
-                                            ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm shadow-emerald-200' 
-                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
-                                    }`}
-                                >
-                                    {isPaid ? (
-                                        <> <CheckCircle2 size={16} /> Pago </>
-                                    ) : (
-                                        <> <Circle size={16} /> Pendente </>
-                                    )}
-                                </button>
+                                {/* Apenas o Gestor vê o botão clicável. Os familiares vêem apenas uma etiqueta informativa. */}
+                                {isAdmin ? (
+                                    <button
+                                        onClick={() => onUpdatePayment(monthData.month, participant.name, 'status', isPaid ? 'pending' : 'paid')}
+                                        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
+                                            isPaid 
+                                                ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm shadow-emerald-200' 
+                                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                                        }`}
+                                    >
+                                        {isPaid ? (
+                                            <> <CheckCircle2 size={16} /> Pago </>
+                                        ) : (
+                                            <> <Circle size={16} /> Pendente </>
+                                        )}
+                                    </button>
+                                ) : (
+                                    <div className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold ${
+                                        isPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                                    }`}>
+                                        {isPaid ? (
+                                            <> <CheckCircle2 size={16} /> Pago </>
+                                        ) : (
+                                            <> <Circle size={16} /> Pendente </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { ParticipantList } from './components/ParticipantList';
@@ -7,37 +9,43 @@ import { PaymentModal } from './components/PaymentModal';
 import { initialConsortiumData, consortiumInfo } from './data';
 
 function App() {
-  // Inicialização otimizada do estado
-  const [consortiumData, setConsortiumData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('consortiumData');
-      return saved ? JSON.parse(saved) : initialConsortiumData;
-    } catch (error) {
-      console.error("Erro ao carregar dados locais", error);
-      return initialConsortiumData;
-    }
-  });
-
+  const [consortiumData, setConsortiumData] = useState(initialConsortiumData);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false); // Bloqueio de Segurança
 
+  // Sincronização em Tempo Real com o Firebase
   useEffect(() => {
-    localStorage.setItem('consortiumData', JSON.stringify(consortiumData));
-  }, [consortiumData]);
+    const docRef = doc(db, 'consorcio', 'dados2026');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setConsortiumData(docSnap.data().meses);
+      } else {
+        // Se a base de dados estiver vazia, cria os dados iniciais
+        setDoc(docRef, { meses: initialConsortiumData });
+      }
+    });
+    
+    return () => unsubscribe();
+  }, []);
 
-  const handleUpdatePayment = (monthName, participantName, field, newValue) => {
-    setConsortiumData(prevData => prevData.map(monthData => {
+  // Atualização de Pagamento apenas para Administradores
+  const handleUpdatePayment = async (monthName, participantName, field, newValue) => {
+    if (!isAdmin) return;
+
+    const updatedData = consortiumData.map(monthData => {
       if (monthData.month !== monthName) return monthData;
-
       const updatedPayments = monthData.payments.map(p => 
         p.name === participantName ? { ...p, [field]: newValue } : p
       );
-
       return { ...monthData, payments: updatedPayments };
-    }));
+    });
+
+    // Atualiza a nuvem instantaneamente
+    const docRef = doc(db, 'consorcio', 'dados2026');
+    await setDoc(docRef, { meses: updatedData }, { merge: true });
   };
 
-  // Performance: Cálculo memorizado com useMemo
   const totalCollected = useMemo(() => {
     return consortiumData.reduce((acc, month) => {
       const monthTotal = month.payments
@@ -58,6 +66,24 @@ function App() {
         nextPayment={consortiumInfo.nextPaymentDate}
       />
 
+      {/* Botão de Acesso do Gestor */}
+      <div className="flex justify-end px-2">
+        <button
+          onClick={() => {
+            if (!isAdmin) {
+              const pwd = prompt("Palavra-passe de gestão:");
+              if (pwd === "alex2026") setIsAdmin(true); // Pode alterar a palavra-passe aqui
+              else if (pwd) alert("Palavra-passe incorreta!");
+            } else {
+              setIsAdmin(false);
+            }
+          }}
+          className="flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          {isAdmin ? "🔒 Bloquear Gestão" : "🔑 Acesso Gestor"}
+        </button>
+      </div>
+
       <ParticipantList
         monthsData={consortiumData}
         onItemClick={setSelectedMonth}
@@ -74,6 +100,7 @@ function App() {
         onClose={() => setSelectedMonth(null)}
         monthData={currentlySelectedData}
         onUpdatePayment={handleUpdatePayment}
+        isAdmin={isAdmin}
       />
     </Layout>
   );
