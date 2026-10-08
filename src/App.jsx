@@ -12,7 +12,7 @@ function App() {
   const [consortiumData, setConsortiumData] = useState(initialConsortiumData);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false); // Bloqueio de Segurança
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Sincronização em Tempo Real com o Firebase
   useEffect(() => {
@@ -21,7 +21,6 @@ function App() {
       if (docSnap.exists()) {
         setConsortiumData(docSnap.data().meses);
       } else {
-        // Se a base de dados estiver vazia, cria os dados iniciais
         setDoc(docRef, { meses: initialConsortiumData });
       }
     });
@@ -41,9 +40,56 @@ function App() {
       return { ...monthData, payments: updatedPayments };
     });
 
-    // Atualiza a nuvem instantaneamente
     const docRef = doc(db, 'consorcio', 'dados2026');
     await setDoc(docRef, { meses: updatedData }, { merge: true });
+  };
+
+  // Função do Sorteio Aleatório
+  const handleShuffleMonths = async () => {
+    if (!isAdmin) return;
+    
+    const confirmShuffle = window.confirm(
+      "ATENÇÃO: Tem a certeza que deseja sortear a ordem dos meses?\n\nIsto vai baralhar quem recebe em cada mês e atualizar o sistema para todos os participantes imediatamente!"
+    );
+    if (!confirmShuffle) return;
+
+    if (!consortiumData || consortiumData.length === 0) return;
+    
+    // 1. Extrair nomes dos participantes
+    let participants = consortiumData[0].payments.map(p => p.name);
+    
+    // 2. Algoritmo Fisher-Yates para baralhar a lista
+    for (let i = participants.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [participants[i], participants[j]] = [participants[j], participants[i]];
+    }
+    
+    // 3. Atribuir os participantes aos meses correspondentes
+    const updatedData = consortiumData.map((monthData, index) => {
+      return {
+        ...monthData,
+        contemplated: participants[index] || "Pendente"
+      };
+    });
+
+    // 4. Guardar na Nuvem (Firebase)
+    const docRef = doc(db, 'consorcio', 'dados2026');
+    await setDoc(docRef, { meses: updatedData }, { merge: true });
+    
+    alert("Sorteio realizado com sucesso! 🎉\nA nova ordem já está disponível para todos.");
+  };
+
+  const toggleAdmin = () => {
+    if (!isAdmin) {
+      const pwd = prompt("Palavra-passe de gestão:");
+      if (pwd === "alex2026") {
+        setIsAdmin(true);
+      } else if (pwd !== null) {
+        alert("Palavra-passe incorreta!");
+      }
+    } else {
+      setIsAdmin(false);
+    }
   };
 
   const totalCollected = useMemo(() => {
@@ -66,21 +112,28 @@ function App() {
         nextPayment={consortiumInfo.nextPaymentDate}
       />
 
-      {/* Botão de Acesso do Gestor */}
-      <div className="flex justify-end px-2">
+      {/* Controlos de Gestão */}
+      <div className="mb-4 mt-4 flex items-center justify-between rounded-lg bg-slate-50 p-2 border border-slate-100">
+        <div>
+          {isAdmin && (
+            <button
+              onClick={handleShuffleMonths}
+              className="flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-95"
+            >
+              🎲 Sortear Meses
+            </button>
+          )}
+        </div>
+
         <button
-          onClick={() => {
-            if (!isAdmin) {
-              const pwd = prompt("Palavra-passe de gestão:");
-              if (pwd === "alex2026") setIsAdmin(true); // Pode alterar a palavra-passe aqui
-              else if (pwd) alert("Palavra-passe incorreta!");
-            } else {
-              setIsAdmin(false);
-            }
-          }}
-          className="flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+          onClick={toggleAdmin}
+          className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+            isAdmin 
+              ? 'bg-red-50 text-red-600 hover:bg-red-100' 
+              : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'
+          }`}
         >
-          {isAdmin ? "🔒 Bloquear Gestão" : "🔑 Acesso Gestor"}
+          {isAdmin ? "🔒 Fechar Gestão" : "🔑 Acesso Gestor"}
         </button>
       </div>
 
