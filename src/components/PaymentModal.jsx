@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, CheckCircle2, Circle, DollarSign, Award } from 'lucide-react';
 
-export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment, isAdmin }) => {
+export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment, onSwapContemplated, isAdmin }) => {
     if (!isOpen || !monthData) return null;
 
     const totalPaid = monthData.payments
@@ -11,6 +11,9 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment, isAd
     const totalParticipants = monthData.payments.length;
     const paidCount = monthData.payments.filter(p => p.status === 'paid').length;
     const progressPercent = (paidCount / totalParticipants) * 100;
+
+    // Extrai a lista de todos os participantes para o dropdown
+    const allParticipants = monthData.payments.map(p => p.name);
 
     return (
         <div 
@@ -27,10 +30,27 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment, isAd
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                                 Mês de {monthData.month}
                             </span>
-                            <h3 className="mt-1 flex items-center gap-2 text-xl font-bold text-slate-800">
+                            
+                            <div className="mt-1 flex items-center gap-2">
                                 <Award size={20} className="text-amber-500" />
-                                {monthData.contemplated}
-                            </h3>
+                                {/* MUDANÇA: Dropdown para troca de meses se for admin */}
+                                {isAdmin ? (
+                                    <select
+                                        value={monthData.contemplated}
+                                        onChange={(e) => onSwapContemplated(monthData.month, e.target.value)}
+                                        className="text-xl font-bold text-slate-800 bg-transparent border-b-2 border-slate-300 focus:border-amber-500 focus:outline-none cursor-pointer py-1"
+                                    >
+                                        {allParticipants.map(name => (
+                                            <option key={name} value={name}>{name}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <h3 className="text-xl font-bold text-slate-800">
+                                        {monthData.contemplated}
+                                    </h3>
+                                )}
+                            </div>
+
                         </div>
                         <button 
                             onClick={onClose}
@@ -80,7 +100,6 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment, isAd
                                     
                                     <div className="flex items-center gap-1 text-slate-500">
                                         <DollarSign size={14} />
-                                        {/* Apenas o Gestor vê a caixa para editar o valor */}
                                         {isAdmin ? (
                                             <input
                                                 type="number"
@@ -97,7 +116,6 @@ export const PaymentModal = ({ isOpen, onClose, monthData, onUpdatePayment, isAd
                                     </div>
                                 </div>
 
-                                {/* Apenas o Gestor vê o botão clicável. Os familiares vêem apenas uma etiqueta informativa. */}
                                 {isAdmin ? (
                                     <button
                                         onClick={() => onUpdatePayment(monthData.month, participant.name, 'status', isPaid ? 'pending' : 'paid')}

@@ -14,9 +14,8 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Sincronização em Tempo Real com o Firebase
   useEffect(() => {
-    const docRef = doc(db, 'consorcio', 'dados2026_final'); // Correção aqui
+    const docRef = doc(db, 'consorcio', 'dados2026_final');
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         setConsortiumData(docSnap.data().meses);
@@ -28,7 +27,6 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Atualização de Pagamento apenas para Administradores
   const handleUpdatePayment = async (monthName, participantName, field, newValue) => {
     if (!isAdmin) return;
 
@@ -40,11 +38,39 @@ function App() {
       return { ...monthData, payments: updatedPayments };
     });
 
-    const docRef = doc(db, 'consorcio', 'dados2026_final'); // Correção aqui
+    const docRef = doc(db, 'consorcio', 'dados2026_final');
     await setDoc(docRef, { meses: updatedData }, { merge: true });
   };
 
-  // Função do Sorteio Aleatório
+  // NOVA FUNÇÃO: Troca inteligente de meses entre dois participantes
+  const handleSwapContemplated = async (currentMonthName, newContemplatedName) => {
+    if (!isAdmin) return;
+
+    const currentMonth = consortiumData.find(m => m.month === currentMonthName);
+    const oldContemplatedName = currentMonth.contemplated;
+
+    // Se escolheu a mesma pessoa, não faz nada
+    if (oldContemplatedName === newContemplatedName) return;
+
+    // Encontra o mês onde a nova pessoa estava
+    const otherMonth = consortiumData.find(m => m.contemplated === newContemplatedName);
+
+    const updatedData = consortiumData.map(monthData => {
+      // Atualiza o mês atual com a nova pessoa
+      if (monthData.month === currentMonthName) {
+        return { ...monthData, contemplated: newContemplatedName };
+      }
+      // Pega o antigo dono deste mês e atira-o para o mês que ficou vago
+      if (otherMonth && monthData.month === otherMonth.month) {
+        return { ...monthData, contemplated: oldContemplatedName };
+      }
+      return monthData;
+    });
+
+    const docRef = doc(db, 'consorcio', 'dados2026_final');
+    await setDoc(docRef, { meses: updatedData }, { merge: true });
+  };
+
   const handleShuffleMonths = async () => {
     if (!isAdmin) return;
     
@@ -55,16 +81,13 @@ function App() {
 
     if (!consortiumData || consortiumData.length === 0) return;
     
-    // 1. Extrair nomes dos participantes
     let participants = consortiumData[0].payments.map(p => p.name);
     
-    // 2. Algoritmo Fisher-Yates para baralhar a lista
     for (let i = participants.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [participants[i], participants[j]] = [participants[j], participants[i]];
     }
     
-    // 3. Atribuir os participantes aos meses correspondentes
     const updatedData = consortiumData.map((monthData, index) => {
       return {
         ...monthData,
@@ -72,8 +95,7 @@ function App() {
       };
     });
 
-    // 4. Guardar na Nuvem (Firebase)
-    const docRef = doc(db, 'consorcio', 'dados2026_final'); // Correção aqui
+    const docRef = doc(db, 'consorcio', 'dados2026_final');
     await setDoc(docRef, { meses: updatedData }, { merge: true });
     
     alert("Sorteio realizado com sucesso! 🎉\nA nova ordem já está disponível para todos.");
@@ -112,7 +134,6 @@ function App() {
         nextPayment={consortiumInfo.nextPaymentDate}
       />
 
-      {/* Controlos de Gestão */}
       <div className="mb-4 mt-4 flex items-center justify-between rounded-lg bg-slate-50 p-2 border border-slate-100">
         <div>
           {isAdmin && (
@@ -153,10 +174,11 @@ function App() {
         onClose={() => setSelectedMonth(null)}
         monthData={currentlySelectedData}
         onUpdatePayment={handleUpdatePayment}
+        onSwapContemplated={handleSwapContemplated}
         isAdmin={isAdmin}
       />
     </Layout>
   );
 }
 
-export default App; // Atualizando botao.
+export default App;
