@@ -159,4 +159,4 @@ function App() {
   );
 }
 
-export default App; // Atualizando botao
+export default App; // Atualizando botao.

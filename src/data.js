@@ -18,21 +18,21 @@ const generateMonthData = (month, contemplated) => {
 };
 
 export const initialConsortiumData = [
-  generateMonthData('Fevereiro', 'Alex'),
-  generateMonthData('Março', 'Andréia'),
-  generateMonthData('Abril', 'Sidney'),
-  generateMonthData('Maio', 'Gabriel'),
-  generateMonthData('Junho', 'Ana'),
-  generateMonthData('Julho', 'Kau'),
-  generateMonthData('Agosto', 'Mirtes'),
-  generateMonthData('Setembro', 'Porto'),
-  generateMonthData('Outubro', 'Lilyan'),
-  generateMonthData('Novembro', 'Daniel'),
+  generateMonthData('Janeiro', 'Alex'),
+  generateMonthData('Fevereiro', 'Andréia'),
+  generateMonthData('Março', 'Sidney'),
+  generateMonthData('Abril', 'Gabriel'),
+  generateMonthData('Maio', 'Ana'),
+  generateMonthData('Junho', 'Kau'),
+  generateMonthData('Julho', 'Mirtes'),
+  generateMonthData('Agosto', 'Porto'),
+  generateMonthData('Setembro', 'Lilyan'),
+  generateMonthData('Outubro', 'Daniel'),
 ];
 
 export const consortiumInfo = {
-  totalGoal: 10000,
-  monthlyValue: 100,
+  totalGoal: 15000, // Corrigido para 15.000 (10 x 1500)
+  monthlyValue: 150, // Corrigido para 150 (valor que cada um paga)
   nextPaymentDate: '5º dia útil',
   rules: [
     'Pagamento todo 5º dia útil (sem atraso).',
