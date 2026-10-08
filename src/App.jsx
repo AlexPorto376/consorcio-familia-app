@@ -16,7 +16,7 @@ function App() {
 
   // Sincronização em Tempo Real com o Firebase
   useEffect(() => {
-    const docRef = doc(db, 'consorcio', 'dados2026');
+    const docRef = doc(db, 'consorcio', 'dados2026_final'); // Correção aqui
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         setConsortiumData(docSnap.data().meses);
@@ -40,7 +40,7 @@ function App() {
       return { ...monthData, payments: updatedPayments };
     });
 
-    const docRef = doc(db, 'consorcio', 'dados2026');
+    const docRef = doc(db, 'consorcio', 'dados2026_final'); // Correção aqui
     await setDoc(docRef, { meses: updatedData }, { merge: true });
   };
 
@@ -73,7 +73,7 @@ function App() {
     });
 
     // 4. Guardar na Nuvem (Firebase)
-    const docRef = doc(db, 'consorcio', 'dados2026');
+    const docRef = doc(db, 'consorcio', 'dados2026_final'); // Correção aqui
     await setDoc(docRef, { meses: updatedData }, { merge: true });
     
     alert("Sorteio realizado com sucesso! 🎉\nA nova ordem já está disponível para todos.");
